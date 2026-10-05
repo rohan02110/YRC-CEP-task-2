@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  chakravyuha-challenge:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: kurukshetra-ctf/challenge3-chakravyuha:latest
+    container_name: chakravyuha-challenge
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      # Secrets mounted read-only at runtime (never baked into image)
+      - ./secrets:/app/secrets:ro
+      - ./public_artifacts:/app/public_artifacts:ro
+      - challenge_data:/data
+    environment:
+      - ADMIN_TOKEN=${ADMIN_TOKEN:-KURUKSHETRA_SACRED_ADMIN_TOKEN_2026}
+      - TOKEN_CAPACITY=${TOKEN_CAPACITY:-400}
+      - TOKEN_REFILL_PER_HOUR=${TOKEN_REFILL_PER_HOUR:-400}
+      - LIFETIME_KEYPRESS_CAP=${LIFETIME_KEYPRESS_CAP:-2000}
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1024M
+    read_only: true
+    tmpfs:
+      - /tmp
+
+volumes:
+  challenge_data:

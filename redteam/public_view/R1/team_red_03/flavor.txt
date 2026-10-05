@@ -1,0 +1,48 @@
+================================================================================
+KURUKSHETRA CTF — CHALLENGE 3 (HARD)
+THE CHAKRAVYUHA CIPHER: SEALED MACHINE
+================================================================================
+
+On the thirteenth day of the great Kurukshetra War, Acharya Drona arrayed the
+Kaurava host in the impenetrable Chakravyuha: a multi-tiered, ever-turning spiral
+labyrinth designed to trap and crush all who enter without mastering its laws.
+
+Eighteen days of destiny divide the ages; eighteen celestial akshauhinis clashed
+upon the sacred field. The epic song records eighteen cantos of divine dialogue
+between Arjuna, paralyzed by doubt, and Krishna, the divine charioteer whose words
+restored the warrior's soul. Sanjaya, granted divine sight by the sage Vyasa,
+narrated the clash from afar, while righteous Yudhishthira listened in grief.
+
+Young Abhimanyu breached the outer ramparts with incomparable valor, but the inner
+sanctum of the cipher remains sealed behind cosmic gates.
+
+================================================================================
+THE RIDDLE OF THE FOUR FRAGMENTS
+================================================================================
+
+Four fragments of ancient military lore were recovered from Drona's command tent:
+
+[FRAGMENT A: THE LAW OF THE SCRIBES]
+"The scribes of the Kuru court keep one law: no counsel is written until the
+speaker is named and the ancient word for spoke is set beside him."
+
+[FRAGMENT B: THE FIRST VOICE]
+"The first voice of the great song was the king who sat in darkness while the
+field blazed — father of the hundred sons — who could inquire of the battle
+but never see its light."
+
+[FRAGMENT C: THE IDLE STROKES]
+"Every scribe makes idle strokes before the first word, to steady the trembling
+hand. No two hands strike the same number of idle marks."
+
+[FRAGMENT D: THE REARRANGED TONGUE]
+"Before any word ever reached the mechanical wheels, the narrator's own name,
+joined to his formula, had already rearranged the tongue."
+
+================================================================================
+INSTRUCTIONS TO THE WARRIOR
+================================================================================
+Offer the seals of the earlier trials to unlock the Seven Gates of Dharma.
+Consult the Training Replica to calibrate your weapons.
+Command the Original Machine, deduce the true alignments, and claim the Sacred Flag!
+================================================================================

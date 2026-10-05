@@ -1,0 +1,43 @@
+# Chakravyuha Merciless Rules Configuration
+rules:
+  token_bucket_capacity: 400
+  token_bucket_refill_per_hour: 400
+  lifetime_keypress_cap: 2000
+  reset_chakra_cost: 30
+  min_keypress_interval_ms: 70
+  max_sustained_rate_per_sec: 12
+  idle_timeout_seconds: 480       # 8 minutes
+  heartbeat_interval_seconds: 3
+  watchdog_timeout_seconds: 10
+  
+  # Lockout ladder for wrong flag submissions (in seconds, capped at 5 minutes)
+  wrong_flag_lockouts: [30, 60, 120, 180, 300]
+  wrong_flag_token_cost: 40
+  
+  # Decoy flag penalty (max 5 minutes)
+  decoy_flag_lockout_seconds: 300
+  decoy_flag_token_cost: 150
+  
+  # Soft violations threshold (5 in 10 minutes = 1 hard strike)
+  soft_violation_window_seconds: 600
+  soft_violations_for_strike: 5
+  
+  # Hard strike penalty ladder (maximum 5 minutes / 300 seconds per strike)
+  strike_penalties:
+    1:
+      lockout_seconds: 300       # 5 minutes
+      token_penalty: 100
+      action: "wipe_machine"
+    2:
+      lockout_seconds: 300       # 5 minutes
+      token_penalty: 200
+      action: "wipe_machine"
+    3:
+      lockout_seconds: 300       # 5 minutes
+      token_penalty: 0
+      halve_lifetime_cap: true
+      action: "dharma_violated"
+    4:
+      lockout_seconds: 300       # 5 minutes
+      action: "lockout_max"
+

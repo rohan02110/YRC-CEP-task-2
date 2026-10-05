@@ -1,0 +1,198 @@
+{
+  "name": "Chakravyuha Training Replica",
+  "description": "Replica built from captured drawings. Its wheels are not the originals.",
+  "alphabet": "ABCDEFGHIJKLMNOPQRSTUVWXYZ{}#_",
+  "alphabet_size": 30,
+  "rotors": {
+    "I": {
+      "wiring": "{AJUZB}NQYPMVTLDE_XRKWHSIOFC#G",
+      "notches": [
+        5,
+        26
+      ]
+    },
+    "II": {
+      "wiring": "JSOTPFVEQIKRXZNUD}YHW#_C{GALBM",
+      "notches": [
+        12,
+        13
+      ]
+    },
+    "III": {
+      "wiring": "YPD}MXUHQEGSCRLBV{TAOFWIKJZN#_",
+      "notches": [
+        15,
+        17
+      ]
+    },
+    "IV": {
+      "wiring": "FCLZPBKOTYRGQN#VXJEI_MUAH{SDW}",
+      "notches": [
+        7,
+        8
+      ]
+    },
+    "V": {
+      "wiring": "LTCUMBV_QPG{XJSF#EZWDIR}YNAKOH",
+      "notches": [
+        20,
+        28
+      ]
+    },
+    "VI": {
+      "wiring": "IYD{}BQLXUFRJTAWOG_MSCZEHN#PKV",
+      "notches": [
+        12,
+        21
+      ]
+    },
+    "VII": {
+      "wiring": "ZAQLUBNEJHKRYVMW#{PI}_TOFGCSXD",
+      "notches": [
+        16,
+        21
+      ]
+    },
+    "VIII": {
+      "wiring": "LABOSQJPVKFN{WXUCE_GIZ}RYDTHM#",
+      "notches": [
+        4,
+        29
+      ]
+    }
+  },
+  "seated_rotors": [
+    "III",
+    "II",
+    "VIII",
+    "VII"
+  ],
+  "default_ringstellung": [
+    1,
+    22,
+    3,
+    24
+  ],
+  "default_grundstellung": [
+    27,
+    24,
+    4,
+    10
+  ],
+  "reflector_pairs": [
+    [
+      "M",
+      "Y"
+    ],
+    [
+      "E",
+      "K"
+    ],
+    [
+      "I",
+      "W"
+    ],
+    [
+      "Z",
+      "}"
+    ],
+    [
+      "A",
+      "F"
+    ],
+    [
+      "R",
+      "T"
+    ],
+    [
+      "B",
+      "J"
+    ],
+    [
+      "D",
+      "U"
+    ],
+    [
+      "N",
+      "{"
+    ],
+    [
+      "L",
+      "Q"
+    ],
+    [
+      "S",
+      "V"
+    ],
+    [
+      "#",
+      "X"
+    ],
+    [
+      "O",
+      "_"
+    ],
+    [
+      "C",
+      "H"
+    ],
+    [
+      "G",
+      "P"
+    ]
+  ],
+  "default_plugboard": [
+    [
+      "N",
+      "O"
+    ],
+    [
+      "B",
+      "F"
+    ],
+    [
+      "U",
+      "X"
+    ],
+    [
+      "P",
+      "V"
+    ],
+    [
+      "R",
+      "}"
+    ],
+    [
+      "Z",
+      "{"
+    ],
+    [
+      "E",
+      "Q"
+    ],
+    [
+      "J",
+      "L"
+    ],
+    [
+      "#",
+      "Y"
+    ],
+    [
+      "C",
+      "M"
+    ],
+    [
+      "G",
+      "H"
+    ],
+    [
+      "A",
+      "I"
+    ],
+    [
+      "D",
+      "T"
+    ]
+  ]
+}

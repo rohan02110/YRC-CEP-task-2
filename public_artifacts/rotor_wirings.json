@@ -1,0 +1,40 @@
+{
+  "alphabet": "ABCDEFGHIJKLMNOPQRSTUVWXYZ{}#_",
+  "rotors": {
+    "I": {
+      "wiring": "ADKORYLPQMV}X_GNFBW#IUTJHZ{SCE",
+      "notches": [
+        9,
+        26
+      ]
+    },
+    "II": {
+      "wiring": "FAIUSXCNV}LY_WJB{D#HOMZEQPTKRG",
+      "notches": [
+        0,
+        5
+      ]
+    },
+    "III": {
+      "wiring": "UDEW#BKM}GPQ_NXCSFZVYLT{HJROAI",
+      "notches": [
+        11,
+        12
+      ]
+    },
+    "IV": {
+      "wiring": "HMWX}#CREZT_IUFY{KPOAVSDLNGBQJ",
+      "notches": [
+        5,
+        28
+      ]
+    },
+    "V": {
+      "wiring": "BYP#EKMID{TF}ORHAQZVLWSUC_JGNX",
+      "notches": [
+        15,
+        24
+      ]
+    }
+  }
+}

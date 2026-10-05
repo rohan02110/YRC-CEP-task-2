@@ -1,0 +1,59 @@
+================================================================================
+CHAKRAVYUHA CIPHER - MACHINE SPECIFICATION (V2)
+================================================================================
+
+1. ALPHABET & INDEXING
+--------------------------------------------------------------------------------
+The machine uses an extended 30-symbol alphabet (0-indexed, N=30):
+Alphabet: ABCDEFGHIJKLMNOPQRSTUVWXYZ{}#_
+
+Index table:
+A:00 B:01 C:02 D:03 E:04 F:05 G:06 H:07 I:08 J:09 K:10 L:11 M:12 N:13 O:14
+P:15 Q:16 R:17 S:18 T:19 U:20 V:21 W:22 X:23 Y:24 Z:25 {:26 }:27 #:28 _:29
+
+2. MACHINE ARCHITECTURE
+--------------------------------------------------------------------------------
+- Rotors: Pool of 8 wheels (I to VIII). Exactly 4 wheels are seated in slots 1 to 4
+  (left to right, slot 1 = rotors[0], slot 4 = rotors[3]).
+- Notches: Each rotor has 2 turnover notches.
+- Reflector: Fixed-point-free involution (15 pairs).
+- Plugboard: Bilateral swapping of up to 13 pairs (26 symbols swapped, 4 unplugged).
+
+3. STEPPING MECHANISM
+--------------------------------------------------------------------------------
+Notches are evaluated BEFORE any rotor moves on each key press:
+
+Pseudocode:
+    if rotors[2].at_notch():
+        rotors[2].step()
+        rotors[1].step()
+    elif rotors[3].at_notch():
+        rotors[2].step()
+    rotors[3].step()
+    # Note: rotors[0] (the leftmost wheel) never steps.
+
+4. SIGNAL PATH
+--------------------------------------------------------------------------------
+Bidirectional symmetric transformation:
+Input Key -> Plugboard -> Rotor 3 -> Rotor 2 -> Rotor 1 -> Rotor 0 (Forward)
+          -> Reflector
+          -> Rotor 0 -> Rotor 1 -> Rotor 2 -> Rotor 3 (Backward)
+          -> Plugboard -> Output Lamp
+
+Forward transform per rotor:
+    shifted = (signal + position - ring_setting) % 30
+    encoded = rotor.forward[shifted]
+    output  = (encoded - position + ring_setting) % 30
+
+Backward transform per rotor:
+    shifted = (signal + position - ring_setting) % 30
+    encoded = rotor.backward[shifted]
+    output  = (encoded - position + ring_setting) % 30
+
+5. RECIPROCITY
+--------------------------------------------------------------------------------
+Because the reflector and plugboard are involutions and the reflector has no fixed
+points:
+    Encrypt(Encrypt(M)) == M
+under identical initial settings and starting positions.
+================================================================================

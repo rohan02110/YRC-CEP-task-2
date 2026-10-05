@@ -1,0 +1,143 @@
+{
+  "team_id": "test_warrior_01",
+  "flag": "KCTF{BRAHMASTRA_CONTAINED_LIGHT_NMDEHX}",
+  "null_prefix_length": 9,
+  "null_prefix_symbols": "GWUBDZXH_",
+  "walzenlage": [
+    "VII",
+    "III",
+    "V",
+    "II"
+  ],
+  "ringstellung": [
+    27,
+    18,
+    1,
+    11
+  ],
+  "grundstellung": [
+    17,
+    12,
+    25,
+    22
+  ],
+  "reflector_pairs": [
+    [
+      "G",
+      "J"
+    ],
+    [
+      "F",
+      "{"
+    ],
+    [
+      "E",
+      "M"
+    ],
+    [
+      "W",
+      "X"
+    ],
+    [
+      "L",
+      "O"
+    ],
+    [
+      "I",
+      "Z"
+    ],
+    [
+      "K",
+      "}"
+    ],
+    [
+      "D",
+      "V"
+    ],
+    [
+      "Q",
+      "_"
+    ],
+    [
+      "A",
+      "N"
+    ],
+    [
+      "#",
+      "T"
+    ],
+    [
+      "P",
+      "R"
+    ],
+    [
+      "C",
+      "H"
+    ],
+    [
+      "B",
+      "S"
+    ],
+    [
+      "U",
+      "Y"
+    ]
+  ],
+  "plugboard_pairs": [
+    [
+      "#",
+      "I"
+    ],
+    [
+      "H",
+      "{"
+    ],
+    [
+      "Q",
+      "X"
+    ],
+    [
+      "A",
+      "E"
+    ],
+    [
+      "F",
+      "M"
+    ],
+    [
+      "V",
+      "Y"
+    ],
+    [
+      "O",
+      "Z"
+    ],
+    [
+      "B",
+      "N"
+    ],
+    [
+      "J",
+      "P"
+    ],
+    [
+      "D",
+      "T"
+    ],
+    [
+      "G",
+      "}"
+    ],
+    [
+      "K",
+      "S"
+    ],
+    [
+      "U",
+      "_"
+    ]
+  ],
+  "pre_sub_keyword": "SANJAYAUVACHA",
+  "raw_plaintext": "GWUBDZXH_DHRITARASHTRAUVACHA#_YADA_YADA_HI_DHARMASYA#_SANJAYA_SAID#_KSHUDRAM_HRIDAYA_DAURBALYAM#_THE_SEVENTH_TIER_TURNS_UPON_CELESTIAL_AXES#_MITRA_DROHE_CHA_PATAKAM#_VALOR_SHINES_IN_DEFEAT_AND_VICTORY#_GHNATO_PI_MADHUSUDANA#_THE_SACRED_SEAL_IS_KCTF{BRAHMASTRA_CONTAINED_LIGHT_NMDEHX}#_MATULAH_SHVASHURAH_POUTRAH#_DHARMA_ENDURES_BEYOND_ALL_AGES#_SHYALAH_SAMBANDHINAS_TATHA#",
+  "ciphertext": "HOHMUMSBG_WD_{PGWZIWAT_BOIOPGVLU{ZU_ER#L}CBBOWUDVF_YLGPBWAJEZ{L{WZU{#RPAKWCKMXVJNEAZYIWTDPGMJPW{ZHH_WS}SLWVKDDZEBCFJ#MYQLFOCGZW{{W}NJNSPEINOBQOOSBW}SNVIUQFHYEA}HQJTU#KRXVWX_F{BCWPTV{DGK_IIX{KKYS{QKBOSDE_R_U_STIJ}ZKEZVXJG_PCJPDUWUXXD}HBU#B_ZPIFKYG___XTA{__KIIRZMDPGUSV}WJFZNVHWNKDFFJJFETMJO##MFN#Y#UFYJ_ZSV#RGPA#SXDGRTQVDPB_WOQZNIPGVF{URSN{E_PPHKXKKQNYKMMX#}OCOLRHRVFNPU_LC"
+}

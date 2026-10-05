@@ -1,0 +1,30 @@
+# Chakravyuha Progressive Seal Gates Configuration
+chain_mode: strict        # strict | soft | off
+
+gates:
+  - id: I
+    name: "Seal of Gandiva"
+    description: "Offered by the bearer of the divine celestial bow (Challenge 1 Flag)."
+    # Default salted SHA-256 for Challenge 1 Flag: KCTF{GANDIVA_BOW_UNSTRINGED_SECRET}
+    # salt:hash format
+    seal_sha256: "9a8b7c6d:eb1a2a0f5d030c484366e962ce3898e6a5583ad1482099bb52e2710dc4a81953"
+    reveals:
+      - enigma_spec.txt
+      - rotor_wirings.json
+      - rotor_notches.json
+    decoy_seals:
+      - "KCTF{WRONG_GANDIVA_SEAL}"
+      - "KCTF{ARJUNA_DROPPED_THE_BOW}"
+
+  - id: II
+    name: "Seal of Sanjaya"
+    description: "Offered by the divine-eyed narrator who perceived the battlefield (Challenge 2 Flag)."
+    # Default salted SHA-256 for Challenge 2 Flag: SANJAYAUVACHA
+    seal_sha256: "3f2e1d0c:0bd2026fd1a557aef2555f4411cd3aadba933d8f549b896042bbd0f1b47a6e14"
+    reveals:
+      - reflector.json
+      - ring_settings.json
+    unlocks: "machine_mode_original"
+    decoy_seals:
+      - "KCTF{SANJAYA_COULD_NOT_SEE}"
+      - "KCTF{BLIND_NARRATOR_DECOY}"
