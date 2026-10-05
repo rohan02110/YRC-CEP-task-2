@@ -18,7 +18,7 @@ RUN groupadd -g 10001 ctfgroup && \
 WORKDIR /app
 
 # Install dependencies
-COPY backend/pyproject.toml ./
+COPY pyproject.toml ./
 RUN pip install --no-cache-dir fastapi uvicorn pydantic pyyaml
 
 # Copy backend application and assets
