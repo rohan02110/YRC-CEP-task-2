@@ -50,7 +50,8 @@ from app.admin import admin_router
 
 from tools.generate_instance import (
     derive_team_instance, generate_replica_config,
-    DEFAULT_MASTER_SEED, DEFAULT_DECOYS, FLAG_PHRASE_LIST, generate_flag_tag
+    DEFAULT_MASTER_SEED, DEFAULT_DECOYS, FLAG_PHRASE_LIST, generate_flag_tag,
+    UNIVERSAL_FLAG
 )
 
 app = FastAPI(title="Chakravyuha Cipher", docs_url=None, redoc_url=None, openapi_url=None)
@@ -507,36 +508,8 @@ def submit_flag(req: SubmitFlagRequest, request: Request, x_sig: Optional[str] =
             baan_remaining=int(tokens)
         )
 
-    # 2. Check Collusion against other registered teams
-    with get_db_connection() as conn:
-        other_teams = conn.execute("SELECT team_id FROM teams WHERE team_id != ?", (team_id,)).fetchall()
-        for ot in other_teams:
-            ot_id = ot["team_id"]
-            for phrase in FLAG_PHRASE_LIST:
-                other_flag = f"KCTF{{{phrase}_{generate_flag_tag(MASTER_SEED, ot_id, phrase)}}}"
-                if submitted == other_flag:
-                    # Collusion detected!
-                    RulesEngine.apply_hard_strike(
-                        team_id,
-                        detector="collusion_detected",
-                        evidence={"submitted_foreign_flag": submitted, "target_team": ot_id},
-                        current_time=now
-                    )
-                    RulesEngine.apply_lockout(team_id, 3600, f"Collusion detected: Flag of team {ot_id} submitted.", current_time=now)
-                    log_audit(req.session_id, team_id, "COLLUSION_ALERT", {"colluding_with": ot_id, "flag": submitted})
-                    tokens = RulesEngine.get_bucket_tokens(team_id, now)
-                    return SubmitFlagResponse(
-                        correct=False,
-                        message="Dharma is violated! Collusion with a foreign army detected. Strike and lockout enforced.",
-                        next_nonce=new_nonce,
-                        seq=req.seq,
-                        is_locked=True,
-                        lock_remaining_seconds=300,
-                        baan_remaining=int(tokens)
-                    )
-
-    # 3. Verify True Flag for this team
-    if submitted == team_inst["flag"] or verify_flag(submitted, stored_salted_hash):
+    # 2. Verify True Flag (Universal for all teams)
+    if submitted == team_inst["flag"] or submitted == UNIVERSAL_FLAG or verify_flag(submitted, stored_salted_hash):
         tokens = RulesEngine.get_bucket_tokens(team_id, now)
         log_audit(req.session_id, team_id, "FLAG_SOLVED", {"flag": submitted})
         return SubmitFlagResponse(

@@ -294,9 +294,13 @@ class RulesEngine:
             RulesEngine.apply_hard_strike(team_id, "decoy_seal_submitted", {"gate": gate_id, "seal": seal_clean}, current_time=now)
             return False, "Dharma violated: Decoy seal detected. A hard strike has fallen upon your formation.", {"decoy": True}
 
-        # Verify seal against salted SHA-256
+        # Verify seal against salted SHA-256 (supports raw string and KCTF{...} wrapper)
         seal_sha256 = os.environ.get(f"GATE{gate_id}_SEAL_SHA256", gate_cfg.get("seal_sha256", ""))
         is_valid = verify_flag(seal_clean, seal_sha256)
+        if not is_valid and seal_clean.startswith("KCTF{") and seal_clean.endswith("}"):
+            is_valid = verify_flag(seal_clean[5:-1], seal_sha256)
+        if not is_valid and not seal_clean.startswith("KCTF{"):
+            is_valid = verify_flag(f"KCTF{{{seal_clean}}}", seal_sha256)
 
         if not is_valid:
             # Increment wrong attempts and apply per-gate lockout ladder

@@ -59,7 +59,7 @@ python tools/derive_team.py --team team_alpha --save
 ```
 
 The output contains:
-- Team's specific flag: `KCTF{<WORDS>_<TAG>}`
+- Universal challenge flag: `KCTF{DRONA_CHAKRAVYUHA_SEAL_UNBROKEN_TRUTH}` (configurable via `CHALLENGE_FLAG` env var)
 - Seated 4 wheels from pool of 8
 - Start positions (Grundstellung) & Ring settings
 - True Reflector pairs & Plugboard pairs

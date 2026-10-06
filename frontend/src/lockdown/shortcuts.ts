@@ -12,12 +12,49 @@ export function initClientLockdown(onValidMachineKey?: (char: string) => void) {
   // 1. Keyboard event interceptor
   const handleKeyDown = (e: KeyboardEvent) => {
     const activeEl = document.activeElement;
-    const isFlagInput = activeEl && activeEl.id === 'flag-input';
+    const isTextInput = !!(activeEl && (
+      activeEl.tagName === 'INPUT' ||
+      activeEl.tagName === 'TEXTAREA' ||
+      activeEl.tagName === 'SELECT' ||
+      (activeEl as HTMLElement).isContentEditable
+    ));
+
+    // If typing in any input field (flag input, gate inputs, dials, etc.)
+    if (isTextInput) {
+      // Allow standard editing shortcuts (Ctrl/Cmd + A, C, V, X, Z)
+      const isEditingCombo = (e.ctrlKey || e.metaKey) && ['a', 'c', 'v', 'x', 'z', 'A', 'C', 'V', 'X', 'Z'].includes(e.key);
+      if (isEditingCombo) {
+        return true;
+      }
+
+      // Block dangerous devtools/browser inspection shortcuts (e.g. F12, Ctrl+U, Ctrl+S, Ctrl+Shift+I)
+      if (/^F([1-9]|1[0-2])$/.test(e.key)) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        api.reportSoftViolation('blocked_function_key', { key: e.key });
+        return false;
+      }
+
+      if ((e.ctrlKey || e.metaKey) && !isEditingCombo) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        api.reportSoftViolation('blocked_ctrl_alt_combo', { key: e.key, code: e.code, ctrl: e.ctrlKey, meta: e.metaKey });
+        return false;
+      }
+
+      // Allow all normal typing, spaces, symbols, and navigation keys inside input
+      const allowedNav = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End', 'Enter', 'Tab', 'Escape'];
+      if (allowedNav.includes(e.key) || e.key.length === 1) {
+        return true;
+      }
+
+      return true;
+    }
 
     const hasCtrl = e.ctrlKey || e.metaKey;
     const hasAlt = e.altKey && !e.getModifierState('AltGraph');
 
-    // Block any Ctrl/Meta or standard Alt combo
+    // Block any Ctrl/Meta or standard Alt combo on main page
     if (hasCtrl || hasAlt) {
       e.preventDefault();
       e.stopImmediatePropagation();
@@ -33,25 +70,7 @@ export function initClientLockdown(onValidMachineKey?: (char: string) => void) {
       return false;
     }
 
-    // If typing in Flag Input
-    if (isFlagInput) {
-      // Allow navigation and typing in flag input
-      const allowedNav = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Home', 'End', 'Enter', 'Tab'];
-      if (allowedNav.includes(e.key)) {
-        if (e.key === 'Tab') {
-          e.preventDefault();
-        }
-        return true;
-      }
-      if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
-        return true;
-      }
-      e.preventDefault();
-      e.stopImmediatePropagation();
-      return false;
-    }
-
-    // Machine Keyboard handling
+    // Machine Keyboard handling (only when NOT in an input field)
     // Ignore repeat key events (holding a key does not step multiple times)
     if (e.repeat) {
       e.preventDefault();
@@ -86,8 +105,12 @@ export function initClientLockdown(onValidMachineKey?: (char: string) => void) {
   window.addEventListener('keydown', handleKeyDown, { capture: true, passive: false });
   document.addEventListener('keydown', handleKeyDown, { capture: true, passive: false });
 
-  // 2. Clipboard Poisoning & Blocking
+  // 2. Clipboard Poisoning & Blocking (exempt input fields)
   const poisonClipboard = (e: ClipboardEvent) => {
+    const target = e.target as HTMLElement | null;
+    if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) {
+      return true;
+    }
     e.preventDefault();
     e.stopImmediatePropagation();
     if (e.clipboardData) {
@@ -98,6 +121,10 @@ export function initClientLockdown(onValidMachineKey?: (char: string) => void) {
   };
 
   const blockPaste = (e: ClipboardEvent) => {
+    const target = e.target as HTMLElement | null;
+    if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) {
+      return true;
+    }
     e.preventDefault();
     e.stopImmediatePropagation();
     api.reportSoftViolation('paste_blocked', {});
@@ -111,11 +138,17 @@ export function initClientLockdown(onValidMachineKey?: (char: string) => void) {
   window.addEventListener('paste', blockPaste, { capture: true, passive: false });
   document.addEventListener('paste', blockPaste, { capture: true, passive: false });
 
-  // 3. Block Context Menu, Drag, Selection, Print, Middle/Right clicks
+  // 3. Block Context Menu, Drag, Selection, Print, Middle/Right clicks (exempt input fields)
   const blockDefault = (e: Event) => {
+    const target = e.target as HTMLElement | null;
+    if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT')) {
+      return true;
+    }
     e.preventDefault();
     e.stopImmediatePropagation();
-    api.reportSoftViolation(`blocked_${e.type}`, {});
+    if (e.type !== 'selectstart') {
+      api.reportSoftViolation(`blocked_${e.type}`, {});
+    }
     return false;
   };
 

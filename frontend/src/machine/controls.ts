@@ -18,6 +18,7 @@ export class MachineControls {
 
   private selectedSocket: string | null = null;
   private isSealed: boolean = false;
+  private resizeObserver: ResizeObserver | null = null;
 
   constructor(
     container: HTMLElement,
@@ -133,8 +134,8 @@ export class MachineControls {
           </div>
 
           <div class="steckerbrett-board-wrapper">
-            <svg id="cables-svg" class="cables-svg-overlay"></svg>
             <div class="steckerbrett-sockets">
+              <svg id="cables-svg" class="cables-svg-overlay"></svg>
               ${KEYBOARD_LAYOUT.map(row => `
                 <div class="sockets-row">
                   ${row.map(char => `
@@ -203,6 +204,23 @@ export class MachineControls {
         this.onResetCallback();
       });
     }
+
+    // Auto re-render cables on layout, container size, and fullscreen changes
+    const socketsContainer = this.container.querySelector('.steckerbrett-sockets');
+    if (socketsContainer && typeof ResizeObserver !== 'undefined') {
+      this.resizeObserver = new ResizeObserver(() => {
+        window.requestAnimationFrame(() => this.renderCables());
+      });
+      this.resizeObserver.observe(socketsContainer);
+    }
+
+    window.addEventListener('resize', () => {
+      window.requestAnimationFrame(() => this.renderCables());
+    });
+
+    document.addEventListener('fullscreenchange', () => {
+      window.requestAnimationFrame(() => this.renderCables());
+    });
   }
 
   private handleSocketClick(char: string) {
@@ -252,7 +270,15 @@ export class MachineControls {
       s.classList.remove('socket-plugged', 'socket-selected');
     });
 
+    if (this.selectedSocket) {
+      const sel = document.getElementById(`socket-${this.selectedSocket}`);
+      if (sel) sel.classList.add('socket-selected');
+    }
+
+    if (this.plugboardPairs.length === 0) return;
+
     const boardRect = svg.getBoundingClientRect();
+    if (boardRect.width === 0 || boardRect.height === 0) return;
 
     const CABLE_COLORS = [
       '#C8892B', '#E5A63F', '#D15822', '#A33322',
@@ -268,8 +294,11 @@ export class MachineControls {
       elA.classList.add('socket-plugged');
       elB.classList.add('socket-plugged');
 
-      const rectA = elA.getBoundingClientRect();
-      const rectB = elB.getBoundingClientRect();
+      const holeA = elA.querySelector('.socket-hole') || elA;
+      const holeB = elB.querySelector('.socket-hole') || elB;
+
+      const rectA = holeA.getBoundingClientRect();
+      const rectB = holeB.getBoundingClientRect();
 
       const x1 = rectA.left + rectA.width / 2 - boardRect.left;
       const y1 = rectA.top + rectA.height / 2 - boardRect.top;
@@ -277,10 +306,12 @@ export class MachineControls {
       const y2 = rectB.top + rectB.height / 2 - boardRect.top;
 
       const color = CABLE_COLORS[idx % CABLE_COLORS.length];
-      const midY = (y1 + y2) / 2 + Math.abs(x2 - x1) * 0.25 + 20;
+      const dx = Math.abs(x2 - x1);
+      const dy = Math.abs(y2 - y1);
+      const midY = (y1 + y2) / 2 + Math.max(20, dx * 0.2 + dy * 0.1);
 
       const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      path.setAttribute('d', `M ${x1} ${y1} Q ${(x1 + x2) / 2} ${midY} ${x2} ${y2}`);
+      path.setAttribute('d', `M ${x1.toFixed(1)} ${y1.toFixed(1)} Q ${((x1 + x2) / 2).toFixed(1)} ${midY.toFixed(1)} ${x2.toFixed(1)} ${y2.toFixed(1)}`);
       path.setAttribute('stroke', color);
       path.setAttribute('stroke-width', '4');
       path.setAttribute('fill', 'none');

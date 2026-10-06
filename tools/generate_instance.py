@@ -24,6 +24,7 @@ from app.engine import (
 )
 
 DEFAULT_MASTER_SEED = os.environ.get("MASTER_SEED", "0x9F82A4C6E1D3B5792468ACE013579BDF2468ACE013579BDF2468ACE013579BDF")
+UNIVERSAL_FLAG = os.environ.get("CHALLENGE_FLAG", os.environ.get("FLAG", "KCTF{DRONA_CHAKRAVYUHA_SEAL_UNBROKEN_TRUTH}")).strip().upper()
 REPLICA_SEED = "REPLICA_SEED_CHAKRAVYUHA_TRAINING_2026"
 ROTOR_NAMES = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII"]
 
@@ -152,7 +153,13 @@ def build_bilingual_plaintext(drbg: HMAC_DRBG, flag: str, phrases: List[str]) ->
     return cleaned, null_prefix, null_len
 
 
-def derive_team_instance(master_seed: str, team_id: str, phrases_file: Path, keyword: str = "SANJAYAUVACHA") -> Dict[str, Any]:
+def derive_team_instance(
+    master_seed: str,
+    team_id: str,
+    phrases_file: Path,
+    keyword: str = "SANJAYAUVACHA",
+    flag_override: str = None
+) -> Dict[str, Any]:
     team_seed_bytes = derive_team_seed(master_seed, team_id)
     drbg = HMAC_DRBG(team_seed_bytes)
 
@@ -170,11 +177,8 @@ def derive_team_instance(master_seed: str, team_id: str, phrases_file: Path, key
     reflector_pairs = generate_reflector(drbg)
     plugboard_pairs = generate_plugboard(drbg, reflector_pairs)
 
-    # 5. Flag generation
-    phrase_idx = drbg.next_int(0, len(FLAG_PHRASE_LIST) - 1)
-    phrase = FLAG_PHRASE_LIST[phrase_idx]
-    tag = generate_flag_tag(master_seed, team_id, phrase)
-    flag = f"KCTF{{{phrase}_{tag}}}"
+    # 5. Universal Flag (Same for all teams)
+    flag = (flag_override or UNIVERSAL_FLAG).strip().upper()
 
     # Flag hash
     flag_salt = os.urandom(8).hex()
@@ -253,6 +257,7 @@ def main():
     parser = argparse.ArgumentParser(description="Generate Kurukshetra CTF Challenge 3 Instances & Artifacts (v2)")
     parser.add_argument("--master-seed", default=DEFAULT_MASTER_SEED, help="Master seed (hex or string)")
     parser.add_argument("--team", default="default_team", help="Team ID to generate instance for")
+    parser.add_argument("--flag", default=None, help="Universal flag override (e.g. KCTF{...})")
     parser.add_argument("--out-dir", default="secrets", help="Directory to write team secret instance")
     parser.add_argument("--public-dir", default="public_artifacts", help="Directory to write public artifacts")
     args = parser.parse_args()
@@ -265,7 +270,7 @@ def main():
     secrets_dir.mkdir(parents=True, exist_ok=True)
 
     # 1. Derive Team instance
-    instance = derive_team_instance(args.master_seed, args.team, phrases_file)
+    instance = derive_team_instance(args.master_seed, args.team, phrases_file, flag_override=args.flag)
     instance_path = secrets_dir / "challenge_instance.json"
     with open(instance_path, "w", encoding="utf-8") as f:
         json.dump(instance, f, indent=2)

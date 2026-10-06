@@ -411,8 +411,8 @@ def test_v2_team_instance_derivation_and_full_pipeline(tmp_path):
     assert inst1["ringstellung"] == inst2["ringstellung"]
     assert inst1["reflector_pairs"] == inst2["reflector_pairs"]
 
-    # Uniqueness check: different teams -> distinct instances
-    assert inst1["flag"] != inst3["flag"]
+    # Uniqueness check: different teams -> distinct machine states with universal flag
+    assert inst1["flag"] == inst3["flag"]
     assert inst1["ciphertext"] != inst3["ciphertext"]
 
     # Full Decryption Pipeline Test:

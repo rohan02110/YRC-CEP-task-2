@@ -204,7 +204,7 @@ def test_successful_gate_unlock_and_artifact_reveal():
     assert len(rings_data["ringstellung"]) == 4
 
 
-def test_per_team_uniqueness_and_collusion_penalty():
+def test_per_team_uniqueness_and_universal_flag():
     # Team 1
     resp1 = client.post("/api/v1/session", json={}).json()
     t1_id = resp1["team_id"]
@@ -216,24 +216,23 @@ def test_per_team_uniqueness_and_collusion_penalty():
     t2_inst = get_team_instance(t2_id)
 
     assert t1_id != t2_id
-    assert t1_inst["flag"] != t2_inst["flag"]
+    assert t1_inst["flag"] == t2_inst["flag"]
     assert t1_inst["ciphertext"] != t2_inst["ciphertext"]
     assert t1_inst["reflector_pairs"] != t2_inst["reflector_pairs"]
 
-    # Team 1 attempts to submit Team 2's flag -> Collusion Detection Triggered
+    # Both teams can submit the universal flag successfully
     seq = 1
     nonce = resp1["next_nonce"]
     resp = client.post("/api/v1/submit", json={
         "session_id": resp1["session_id"],
         "seq": seq,
         "nonce": nonce,
-        "flag": t2_inst["flag"]
+        "flag": t1_inst["flag"]
     })
     assert resp.status_code == 200
     sub_data = resp.json()
-    assert sub_data["correct"] is False
-    assert "collusion" in sub_data["message"].lower()
-    assert sub_data["is_locked"] is True
+    assert sub_data["correct"] is True
+    assert sub_data["is_locked"] is False
 
 
 def test_dual_machine_modes_and_e2e_decryption():

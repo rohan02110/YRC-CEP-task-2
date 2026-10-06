@@ -156,6 +156,15 @@ export class GatesPanel {
         if (btn) {
           btn.addEventListener('click', () => this.handleUnlock(g.id));
         }
+        const input = listEl.querySelector(`#gate-seal-input-${g.id}`) as HTMLInputElement;
+        if (input) {
+          input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              this.handleUnlock(g.id);
+            }
+          });
+        }
       });
 
       const engageBtn = listEl.querySelector('#engage-original-btn');

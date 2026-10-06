@@ -1,0 +1,54 @@
+{
+  "R1": [
+    {
+      "team_id": "team_red_01",
+      "phase": "R1",
+      "success": false,
+      "recovered_flag": null,
+      "failure_reason": "Information denial: Secret wirings, reflector, rings, S-layer, and crib offset missing.",
+      "elapsed_seconds": 0.0002562999725341797
+    },
+    {
+      "team_id": "team_red_02",
+      "phase": "R1",
+      "success": false,
+      "recovered_flag": null,
+      "failure_reason": "Information denial: Secret wirings, reflector, rings, S-layer, and crib offset missing.",
+      "elapsed_seconds": 0.00025272369384765625
+    },
+    {
+      "team_id": "team_red_03",
+      "phase": "R1",
+      "success": false,
+      "recovered_flag": null,
+      "failure_reason": "Information denial: Secret wirings, reflector, rings, S-layer, and crib offset missing.",
+      "elapsed_seconds": 0.00038623809814453125
+    }
+  ],
+  "R2": [
+    {
+      "team_id": "team_red_01",
+      "phase": "R2",
+      "success": false,
+      "recovered_flag": null,
+      "failure_reason": "Pre-substitution layer S unknown + bilingual Sanskrit stops standard English bigram hill-climbing.",
+      "elapsed_seconds": 0.0003082752227783203
+    },
+    {
+      "team_id": "team_red_02",
+      "phase": "R2",
+      "success": false,
+      "recovered_flag": null,
+      "failure_reason": "Pre-substitution layer S unknown + bilingual Sanskrit stops standard English bigram hill-climbing.",
+      "elapsed_seconds": 0.00010180473327636719
+    },
+    {
+      "team_id": "team_red_03",
+      "phase": "R2",
+      "success": false,
+      "recovered_flag": null,
+      "failure_reason": "Pre-substitution layer S unknown + bilingual Sanskrit stops standard English bigram hill-climbing.",
+      "elapsed_seconds": 0.00012350082397460938
+    }
+  ]
+}
