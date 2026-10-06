@@ -7,7 +7,7 @@ import json
 import os
 import time
 from pathlib import Path
-from typing import Dict, Optional, Tuple, Any
+from typing import Dict, List, Optional, Tuple, Any
 import yaml
 
 from app.db import get_db_connection, log_audit
