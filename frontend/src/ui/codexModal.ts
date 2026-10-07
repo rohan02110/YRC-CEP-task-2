@@ -155,7 +155,7 @@ export class CodexModal {
                     <span class="step-tag">FLAG SUBMISSION</span>
                   </div>
                   <p>
-                    Reversing the machine gives the intermediate layer. Invert the keyword substitution to recover the full bilingual narrative ending in your team's flag format <code>KCTF{...}</code>. Offer the sacred answer to claim total victory!
+                    Reversing the machine gives the intermediate layer. Invert the keyword substitution to recover the full bilingual narrative ending in your team's flag format <code>KCTF{...}</code>. Submit the recovered flag to the CTF platform to claim victory!
                   </p>
                 </div>
               </div>
