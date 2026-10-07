@@ -15,7 +15,6 @@ import { Keyboard } from './machine/keyboard';
 import { OutputTape } from './machine/tape';
 import { MachineControls } from './machine/controls';
 import { GaugeDisplay } from './machine/gauge';
-import { FlagSubmissionPanel } from './ui/flagModal';
 import { ArtifactsModal } from './ui/artifactsModal';
 import { CodexModal } from './ui/codexModal';
 import { GatesPanel } from './ui/gates';
@@ -42,13 +41,12 @@ import { GatesPanel } from './ui/gates';
   const lampMount = document.getElementById('lampboard-mount');
   const keyMount = document.getElementById('keyboard-mount');
   const ctrlMount = document.getElementById('controls-mount');
-  const flagMount = document.getElementById('flag-mount');
   const artMount = document.getElementById('artifacts-mount');
   const gatesMount = document.getElementById('gates-mount');
   const tapeCanvas = document.getElementById('output-tape-canvas') as HTMLCanvasElement;
   const modeLabel = document.getElementById('mmi-mode-label');
 
-  if (!gaugeMount || !rotorsMount || !lampMount || !keyMount || !ctrlMount || !flagMount || !artMount || !tapeCanvas) {
+  if (!gaugeMount || !rotorsMount || !lampMount || !keyMount || !ctrlMount || !artMount || !tapeCanvas) {
     console.error('DOM mounting nodes missing');
     return;
   }
@@ -124,7 +122,6 @@ import { GatesPanel } from './ui/gates';
   const keyboard = new Keyboard(keyMount, handleMachineKeyPress);
 
   // Panels & Modals
-  new FlagSubmissionPanel(flagMount);
   const codex = new CodexModal();
 
   // Codex Trigger Buttons
