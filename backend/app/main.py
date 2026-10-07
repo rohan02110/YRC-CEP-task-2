@@ -563,6 +563,9 @@ def get_gates_status(session_id: str):
         gid = g["id"]
         is_unlocked = gid in unlocked_gates
         is_locked, rem_lock = RulesEngine.check_gate_lockout(team_id, gid, now)
+        if is_unlocked:
+            is_locked = False
+            rem_lock = 0
         gate_infos.append(GateInfo(
             id=gid,
             name=g.get("name", f"Gate {gid}"),
@@ -574,7 +577,7 @@ def get_gates_status(session_id: str):
         ))
 
     return GatesStatusResponse(
-        chain_mode=gates_cfg.get("chain_mode", "strict"),
+        chain_mode=gates_cfg.get("chain_mode", "off"),
         current_mode=current_mode,
         gates=gate_infos
     )

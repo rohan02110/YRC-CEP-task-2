@@ -19,26 +19,61 @@ export function initClientLockdown(onValidMachineKey?: (char: string) => void) {
       (activeEl as HTMLElement).isContentEditable
     ));
 
-    // If typing in any input field (flag input, gate inputs, dials, etc.)
+    // A. Detect and block all Copy / Paste / Cut keyboard shortcuts everywhere (both inside and outside inputs)
+    const isPasteCombo =
+      ((e.ctrlKey || e.metaKey) && (e.key === 'v' || e.key === 'V' || e.code === 'KeyV')) ||
+      (e.shiftKey && (e.key === 'Insert' || e.code === 'Insert'));
+
+    const isCopyCombo =
+      ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'C' || e.code === 'KeyC')) ||
+      ((e.ctrlKey || e.metaKey) && (e.key === 'Insert' || e.code === 'Insert'));
+
+    const isCutCombo =
+      ((e.ctrlKey || e.metaKey) && (e.key === 'x' || e.key === 'X' || e.code === 'KeyX')) ||
+      (e.shiftKey && (e.key === 'Delete' || e.code === 'Delete' || e.key === 'Del'));
+
+    if (isPasteCombo) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      api.reportSoftViolation('paste_blocked', { key: e.key, code: e.code });
+      return false;
+    }
+
+    if (isCopyCombo || isCutCombo) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(DECOY_CLIPBOARD_FLAG).catch(() => {});
+      }
+      api.reportSoftViolation('clipboard_poison_triggered', {
+        key: e.key,
+        code: e.code,
+        action: isCopyCombo ? 'copy' : 'cut'
+      });
+      return false;
+    }
+
+    // B. Block Function keys F1 - F12 everywhere
+    if (/^F([1-9]|1[0-2])$/.test(e.key)) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      api.reportSoftViolation('blocked_function_key', { key: e.key });
+      return false;
+    }
+
+    // C. If typing in any input field (flag input, gate inputs, dials, etc.)
     if (isTextInput) {
-      // Allow standard editing shortcuts (Ctrl/Cmd + A, C, V, X, Z)
-      const isEditingCombo = (e.ctrlKey || e.metaKey) && ['a', 'c', 'v', 'x', 'z', 'A', 'C', 'V', 'X', 'Z'].includes(e.key);
-      if (isEditingCombo) {
+      // Allow select all (Ctrl+A) and undo/redo (Ctrl+Z, Ctrl+Y)
+      const isAllowedNavCombo = (e.ctrlKey || e.metaKey) && ['a', 'A', 'z', 'Z', 'y', 'Y'].includes(e.key);
+      if (isAllowedNavCombo) {
         return true;
       }
 
-      // Block dangerous devtools/browser inspection shortcuts (e.g. F12, Ctrl+U, Ctrl+S, Ctrl+Shift+I)
-      if (/^F([1-9]|1[0-2])$/.test(e.key)) {
+      // Block any other Ctrl / Meta / Alt combos in input fields (e.g. Ctrl+S, Ctrl+U, Ctrl+Shift+I, etc.)
+      if (e.ctrlKey || e.metaKey || (e.altKey && !e.getModifierState('AltGraph'))) {
         e.preventDefault();
         e.stopImmediatePropagation();
-        api.reportSoftViolation('blocked_function_key', { key: e.key });
-        return false;
-      }
-
-      if ((e.ctrlKey || e.metaKey) && !isEditingCombo) {
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        api.reportSoftViolation('blocked_ctrl_alt_combo', { key: e.key, code: e.code, ctrl: e.ctrlKey, meta: e.metaKey });
+        api.reportSoftViolation('blocked_ctrl_alt_combo', { key: e.key, code: e.code, ctrl: e.ctrlKey, meta: e.metaKey, alt: e.altKey });
         return false;
       }
 
@@ -51,6 +86,7 @@ export function initClientLockdown(onValidMachineKey?: (char: string) => void) {
       return true;
     }
 
+    // D. Machine Keyboard handling (only when NOT in an input field)
     const hasCtrl = e.ctrlKey || e.metaKey;
     const hasAlt = e.altKey && !e.getModifierState('AltGraph');
 
@@ -62,15 +98,6 @@ export function initClientLockdown(onValidMachineKey?: (char: string) => void) {
       return false;
     }
 
-    // Block Function keys F1 - F12
-    if (/^F([1-9]|1[0-2])$/.test(e.key)) {
-      e.preventDefault();
-      e.stopImmediatePropagation();
-      api.reportSoftViolation('blocked_function_key', { key: e.key });
-      return false;
-    }
-
-    // Machine Keyboard handling (only when NOT in an input field)
     // Ignore repeat key events (holding a key does not step multiple times)
     if (e.repeat) {
       e.preventDefault();
@@ -101,34 +128,39 @@ export function initClientLockdown(onValidMachineKey?: (char: string) => void) {
     return false;
   };
 
-  // Register capture-phase listeners on window and document
+  // Register capture-phase keydown listeners on window and document
   window.addEventListener('keydown', handleKeyDown, { capture: true, passive: false });
   document.addEventListener('keydown', handleKeyDown, { capture: true, passive: false });
 
-  // 2. Clipboard Poisoning & Blocking (exempt input fields)
+  // 2. Universal Clipboard Poisoning & Blocking (NO input exemption)
   const poisonClipboard = (e: ClipboardEvent) => {
-    const target = e.target as HTMLElement | null;
-    if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) {
-      return true;
-    }
     e.preventDefault();
     e.stopImmediatePropagation();
     if (e.clipboardData) {
       e.clipboardData.setData('text/plain', DECOY_CLIPBOARD_FLAG);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(DECOY_CLIPBOARD_FLAG).catch(() => {});
     }
     api.reportSoftViolation('clipboard_poison_triggered', { type: e.type });
     return false;
   };
 
   const blockPaste = (e: ClipboardEvent) => {
-    const target = e.target as HTMLElement | null;
-    if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) {
-      return true;
-    }
     e.preventDefault();
     e.stopImmediatePropagation();
     api.reportSoftViolation('paste_blocked', {});
     return false;
+  };
+
+  // Intercept beforeinput paste and drop events (modern browsers/mobile autofill)
+  const handleBeforeInput = (e: InputEvent) => {
+    if (e.inputType === 'insertFromPaste' || e.inputType === 'insertFromDrop') {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      api.reportSoftViolation('paste_blocked', { inputType: e.inputType });
+      return false;
+    }
   };
 
   window.addEventListener('copy', poisonClipboard, { capture: true, passive: false });
@@ -137,29 +169,68 @@ export function initClientLockdown(onValidMachineKey?: (char: string) => void) {
   document.addEventListener('cut', poisonClipboard, { capture: true, passive: false });
   window.addEventListener('paste', blockPaste, { capture: true, passive: false });
   document.addEventListener('paste', blockPaste, { capture: true, passive: false });
+  window.addEventListener('beforeinput', handleBeforeInput as EventListener, { capture: true, passive: false });
+  document.addEventListener('beforeinput', handleBeforeInput as EventListener, { capture: true, passive: false });
 
-  // 3. Block Context Menu, Drag, Selection, Print, Middle/Right clicks (exempt input fields)
-  const blockDefault = (e: Event) => {
-    const target = e.target as HTMLElement | null;
-    if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT')) {
-      return true;
-    }
+  // 3. Block Context Menu, Drag & Drop, Selection, Print, Middle/Right clicks
+  const blockContextMenu = (e: MouseEvent) => {
     e.preventDefault();
     e.stopImmediatePropagation();
-    if (e.type !== 'selectstart') {
-      api.reportSoftViolation(`blocked_${e.type}`, {});
+    api.reportSoftViolation('blocked_contextmenu', {});
+    return false;
+  };
+
+  const blockDragDrop = (e: DragEvent) => {
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    if (e.type === 'drop') {
+      api.reportSoftViolation('blocked_drop', {});
     }
     return false;
   };
 
-  window.addEventListener('contextmenu', blockDefault, { capture: true, passive: false });
-  document.addEventListener('contextmenu', blockDefault, { capture: true, passive: false });
-  window.addEventListener('selectstart', blockDefault, { capture: true, passive: false });
-  document.addEventListener('selectstart', blockDefault, { capture: true, passive: false });
-  window.addEventListener('dragstart', blockDefault, { capture: true, passive: false });
-  window.addEventListener('drop', blockDefault, { capture: true, passive: false });
-  window.addEventListener('dragover', blockDefault, { capture: true, passive: false });
-  window.addEventListener('beforeprint', blockDefault, { capture: true, passive: false });
-  window.addEventListener('afterprint', blockDefault, { capture: true, passive: false });
-  window.addEventListener('auxclick', blockDefault, { capture: true, passive: false });
+  const blockAuxClick = (e: MouseEvent) => {
+    // Middle click (button === 1) or secondary click (button === 2)
+    if (e.button === 1 || e.button === 2) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      api.reportSoftViolation('blocked_auxclick', { button: e.button });
+      return false;
+    }
+  };
+
+  const handleSelectStart = (e: Event) => {
+    const target = e.target as HTMLElement | null;
+    // Allow text selection inside inputs for cursor placement and editing
+    if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) {
+      return true;
+    }
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    return false;
+  };
+
+  const blockPrint = (e: Event) => {
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    api.reportSoftViolation(`blocked_${e.type}`, {});
+    return false;
+  };
+
+  window.addEventListener('contextmenu', blockContextMenu, { capture: true, passive: false });
+  document.addEventListener('contextmenu', blockContextMenu, { capture: true, passive: false });
+  window.addEventListener('dragstart', blockDragDrop, { capture: true, passive: false });
+  document.addEventListener('dragstart', blockDragDrop, { capture: true, passive: false });
+  window.addEventListener('dragover', blockDragDrop, { capture: true, passive: false });
+  document.addEventListener('dragover', blockDragDrop, { capture: true, passive: false });
+  window.addEventListener('drop', blockDragDrop, { capture: true, passive: false });
+  document.addEventListener('drop', blockDragDrop, { capture: true, passive: false });
+  window.addEventListener('selectstart', handleSelectStart, { capture: true, passive: false });
+  document.addEventListener('selectstart', handleSelectStart, { capture: true, passive: false });
+  window.addEventListener('beforeprint', blockPrint, { capture: true, passive: false });
+  document.addEventListener('beforeprint', blockPrint, { capture: true, passive: false });
+  window.addEventListener('afterprint', blockPrint, { capture: true, passive: false });
+  document.addEventListener('afterprint', blockPrint, { capture: true, passive: false });
+  window.addEventListener('auxclick', blockAuxClick, { capture: true, passive: false });
+  document.addEventListener('auxclick', blockAuxClick, { capture: true, passive: false });
 }

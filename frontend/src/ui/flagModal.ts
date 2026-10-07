@@ -34,6 +34,10 @@ export class FlagSubmissionPanel {
             spellcheck="false"
             autocapitalize="off"
             autocorrect="off"
+            onpaste="return false;"
+            oncopy="return false;"
+            oncut="return false;"
+            ondrop="return false;"
           />
           <button type="submit" id="flag-submit-btn" class="flag-submit-button">
             SUBMIT TO DHARMA

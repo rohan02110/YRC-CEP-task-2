@@ -137,7 +137,21 @@ export class GatesPanel {
               <div class="locked-form">
                 <p class="gate-desc">${idx === 0 ? 'Offer the seal of the first trial (Challenge 1 flag).' : 'Offer the seal of the second trial (Challenge 2 flag).'}</p>
                 <div class="gate-input-row">
-                  <input type="text" class="kuru-input gate-seal-input" id="gate-seal-input-${g.id}" placeholder="Enter sacred seal..." ${g.is_locked ? 'disabled' : ''} />
+                  <input
+                    type="text"
+                    class="kuru-input gate-seal-input"
+                    id="gate-seal-input-${g.id}"
+                    placeholder="Enter sacred seal..."
+                    ${g.is_locked ? 'disabled' : ''}
+                    autocomplete="off"
+                    spellcheck="false"
+                    autocapitalize="off"
+                    autocorrect="off"
+                    onpaste="return false;"
+                    oncopy="return false;"
+                    oncut="return false;"
+                    ondrop="return false;"
+                  />
                   <button class="kuru-btn primary-btn gate-unlock-btn" data-gate-id="${g.id}" ${g.is_locked ? 'disabled' : ''}>
                     OFFER SEAL
                   </button>

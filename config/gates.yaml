@@ -1,5 +1,5 @@
 # Chakravyuha Progressive Seal Gates Configuration
-chain_mode: strict        # strict | soft | off
+chain_mode: "strict"        # strict | soft | off
 
 gates:
   - id: I

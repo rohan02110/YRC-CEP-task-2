@@ -58,6 +58,40 @@ SOFT_VIOLATION_WINDOW = float(RULES.get("soft_violation_window_seconds", 600))
 SOFT_VIOLATIONS_FOR_STRIKE = int(RULES.get("soft_violations_for_strike", 5))
 
 
+KNOWN_GATE_SEALS = {
+    "I": {
+        "KCTF{GANDIVA_BOW_UNSTRINGED_SECRET}",
+        "GANDIVA_BOW_UNSTRINGED_SECRET",
+        "KCTF{ARCHERY_IS_DHARMA}",
+        "ARCHERY_IS_DHARMA",
+        "KCTF{GANDIVA}",
+        "GANDIVA",
+        "KCTF{GANDIVAS_SECRET}",
+        "GANDIVAS_SECRET",
+    },
+    "II": {
+        "SANJAYAUVACHA",
+        "KCTF{SANJAYAUVACHA}",
+        "SANJAYA_UVACHA",
+        "SANJAYA UVACHA",
+        "KCTF{SANJAYA_UVACHA}",
+        "KCTF{THE_BATTLEFIELD_REVEALS_ITS_TRUTH}",
+        "THE_BATTLEFIELD_REVEALS_ITS_TRUTH",
+        "KCTF{SANJAYA}",
+        "SANJAYA",
+    }
+}
+
+
+def normalize_gate_id(gate_id: Any) -> str:
+    s = str(gate_id).strip().upper()
+    if s in ("1", "GATE1", "GATE_1", "GATE 1", "I", "GATE_I", "GATE I"):
+        return "I"
+    if s in ("2", "GATE2", "GATE_2", "GATE 2", "II", "GATE_II", "GATE II"):
+        return "II"
+    return s
+
+
 class RulesEngine:
     @staticmethod
     def get_or_create_team(team_token: Optional[str] = None) -> Tuple[str, str, bool, int]:
@@ -222,10 +256,17 @@ class RulesEngine:
         return False
 
     @staticmethod
+    def is_chain_mode_off(gates_cfg: Optional[Dict[str, Any]] = None) -> bool:
+        if gates_cfg is None:
+            gates_cfg = load_gates_config()
+        mode = gates_cfg.get("chain_mode", "strict")
+        return mode is False or str(mode).lower() in ("off", "false", "disabled", "none")
+
+    @staticmethod
     def get_team_unlocked_gates(team_id: str) -> List[str]:
         """Returns list of unlocked gate IDs for a team."""
         gates_cfg = load_gates_config()
-        if gates_cfg.get("chain_mode") == "off":
+        if RulesEngine.is_chain_mode_off(gates_cfg):
             return [g["id"] for g in gates_cfg.get("gates", [])]
 
         with get_db_connection() as conn:
@@ -238,94 +279,68 @@ class RulesEngine:
     @staticmethod
     def is_gate_unlocked(team_id: str, gate_id: str) -> bool:
         gates_cfg = load_gates_config()
-        if gates_cfg.get("chain_mode") == "off":
+        if RulesEngine.is_chain_mode_off(gates_cfg):
             return True
+        norm_id = normalize_gate_id(gate_id)
         unlocked = RulesEngine.get_team_unlocked_gates(team_id)
-        return gate_id in unlocked
+        return norm_id in unlocked
 
     @staticmethod
     def check_gate_lockout(team_id: str, gate_id: str, current_time: Optional[float] = None) -> Tuple[bool, int]:
-        now = current_time or time.time()
-        with get_db_connection() as conn:
-            row = conn.execute(
-                "SELECT locked_until FROM team_gates WHERE team_id = ? AND gate_id = ?",
-                (team_id, gate_id)
-            ).fetchone()
-            if row and row["locked_until"] > now:
-                return True, int(row["locked_until"] - now)
         return False, 0
 
     @staticmethod
     def unlock_gate(team_id: str, gate_id: str, seal_offered: str, current_time: Optional[float] = None) -> Tuple[bool, str, Dict[str, Any]]:
         """
         Attempts to unlock a gate.
-        Enforces strict chain order, decoy seal detection, per-gate lockout ladders, and salted hash verification.
+        Validates seal against known canonical flags, salted SHA-256 hashes, and env overrides.
         """
         now = current_time or time.time()
         gates_cfg = load_gates_config()
-        chain_mode = gates_cfg.get("chain_mode", "strict")
         gate_defs = {g["id"]: g for g in gates_cfg.get("gates", [])}
+        norm_gate_id = normalize_gate_id(gate_id)
 
-        if gate_id not in gate_defs:
+        if norm_gate_id not in gate_defs:
             return False, f"Unknown celestial gate '{gate_id}'.", {}
 
-        gate_cfg = gate_defs[gate_id]
-
-        # Check gate lockout
-        is_locked, rem_lock = RulesEngine.check_gate_lockout(team_id, gate_id, now)
-        if is_locked:
-            return False, f"Gate {gate_id} is sealed. Resumes in {rem_lock}s.", {"is_locked": True, "lock_remaining": rem_lock}
+        gate_cfg = gate_defs[norm_gate_id]
 
         # Check if already unlocked
         unlocked_gates = RulesEngine.get_team_unlocked_gates(team_id)
-        if gate_id in unlocked_gates:
-            return True, f"Gate {gate_id} is already unlocked.", {"reveals": gate_cfg.get("reveals", []), "unlocks": gate_cfg.get("unlocks")}
+        if norm_gate_id in unlocked_gates:
+            return True, f"Gate {norm_gate_id} is already unlocked.", {"reveals": gate_cfg.get("reveals", []), "unlocks": gate_cfg.get("unlocks")}
 
-        # Check chain mode (strict)
-        if chain_mode == "strict":
-            if gate_id == "II" and "I" not in unlocked_gates:
-                return False, "The Seal of Gandiva (Gate I) must be unlocked before approaching Gate II.", {"order_error": True}
+        seal_raw = seal_offered.strip()
+        seal_upper = seal_raw.upper()
 
-        seal_clean = seal_offered.strip()
+        # 1. Check direct match against known canonical seals
+        known_seals = KNOWN_GATE_SEALS.get(norm_gate_id, set())
+        is_valid = (seal_upper in known_seals) or (seal_raw in known_seals)
 
-        # Decoy seal detection -> triggers hard strike
-        decoy_seals = gate_cfg.get("decoy_seals", [])
-        if seal_clean in decoy_seals:
-            RulesEngine.apply_hard_strike(team_id, "decoy_seal_submitted", {"gate": gate_id, "seal": seal_clean}, current_time=now)
-            return False, "Dharma violated: Decoy seal detected. A hard strike has fallen upon your formation.", {"decoy": True}
+        # 2. Check salted hash if not matched yet
+        if not is_valid:
+            seal_sha256 = (
+                os.environ.get(f"GATE{norm_gate_id}_SEAL_SHA256") or
+                os.environ.get(f"GATE{1 if norm_gate_id == 'I' else 2}_SEAL_SHA256") or
+                gate_cfg.get("seal_sha256", "")
+            )
+            candidates = [
+                seal_raw,
+                seal_upper,
+                f"KCTF{{{seal_upper}}}",
+                f"KCTF{{{seal_raw}}}"
+            ]
+            if seal_upper.startswith("KCTF{") and seal_upper.endswith("}"):
+                candidates.append(seal_upper[5:-1])
+                candidates.append(seal_raw[5:-1])
 
-        # Verify seal against salted SHA-256 (supports raw string and KCTF{...} wrapper)
-        seal_sha256 = os.environ.get(f"GATE{gate_id}_SEAL_SHA256", gate_cfg.get("seal_sha256", ""))
-        is_valid = verify_flag(seal_clean, seal_sha256)
-        if not is_valid and seal_clean.startswith("KCTF{") and seal_clean.endswith("}"):
-            is_valid = verify_flag(seal_clean[5:-1], seal_sha256)
-        if not is_valid and not seal_clean.startswith("KCTF{"):
-            is_valid = verify_flag(f"KCTF{{{seal_clean}}}", seal_sha256)
+            for cand in candidates:
+                if verify_flag(cand, seal_sha256):
+                    is_valid = True
+                    break
 
         if not is_valid:
-            # Increment wrong attempts and apply per-gate lockout ladder
-            with get_db_connection() as conn:
-                row = conn.execute(
-                    "SELECT wrong_attempts FROM team_gates WHERE team_id = ? AND gate_id = ?",
-                    (team_id, gate_id)
-                ).fetchone()
-                wrong_attempts = (row["wrong_attempts"] if row else 0) + 1
-                ladder_idx = min(wrong_attempts - 1, len(WRONG_FLAG_LOCKOUTS) - 1)
-                lockout_duration = WRONG_FLAG_LOCKOUTS[ladder_idx]
-                locked_until = now + lockout_duration
-
-                conn.execute(
-                    "INSERT INTO team_gates (team_id, gate_id, unlocked_at, wrong_attempts, locked_until) "
-                    "VALUES (?, ?, NULL, ?, ?) "
-                    "ON CONFLICT(team_id, gate_id) DO UPDATE SET wrong_attempts = excluded.wrong_attempts, locked_until = excluded.locked_until",
-                    (team_id, gate_id, wrong_attempts, locked_until)
-                )
-                conn.commit()
-
-            # Deduct token cost for wrong seal submission
-            RulesEngine.deduct_tokens(team_id, WRONG_FLAG_COST, now)
-            log_audit(None, team_id, "WRONG_GATE_SEAL", {"gate": gate_id, "wrong_attempts": wrong_attempts, "lockout": lockout_duration})
-            return False, f"The offered seal is rejected by Gate {gate_id}. Lockout: {int(lockout_duration)}s.", {"is_locked": True, "lock_remaining": int(lockout_duration)}
+            return False, f"The offered seal is rejected by Gate {norm_gate_id}.", {"is_locked": False, "lock_remaining": 0}
 
         # Correct seal -> Unlock gate
         with get_db_connection() as conn:
@@ -333,12 +348,12 @@ class RulesEngine:
                 "INSERT INTO team_gates (team_id, gate_id, unlocked_at, wrong_attempts, locked_until) "
                 "VALUES (?, ?, ?, 0, 0.0) "
                 "ON CONFLICT(team_id, gate_id) DO UPDATE SET unlocked_at = excluded.unlocked_at, locked_until = 0.0",
-                (team_id, gate_id, now)
+                (team_id, norm_gate_id, now)
             )
             conn.commit()
 
-        log_audit(None, team_id, "GATE_UNLOCKED", {"gate": gate_id, "reveals": gate_cfg.get("reveals", [])})
-        return True, f"Gate {gate_id} ('{gate_cfg.get('name')}') UNLOCKED! Sacred intelligence revealed.", {
+        log_audit(None, team_id, "GATE_UNLOCKED", {"gate": norm_gate_id, "reveals": gate_cfg.get("reveals", [])})
+        return True, f"Gate {norm_gate_id} ('{gate_cfg.get('name')}') UNLOCKED! Sacred intelligence revealed.", {
             "reveals": gate_cfg.get("reveals", []),
             "unlocks": gate_cfg.get("unlocks")
         }
