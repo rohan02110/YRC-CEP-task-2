@@ -100,39 +100,19 @@ Automated verification via [`tools/reference_solver.py`](file:///d:/Kurukshetra/
 
 ---
 
-## 6. Progressive Hints Schedule (Full Text Release)
+## 6. Progressive Hints Schedule (2 Hard Cryptic Hints)
 
-The organizers can release 6 progressive text hints live during the CTF competition using the Admin API (`POST /admin/hints/{id}/release`). Below is the complete text, difficulty level, and cryptographic objective for each hint:
+The organizers can release 2 progressive text hints live during the CTF competition using the Admin API (`POST /admin/hints/{id}/release`). The hints are intentionally cryptic and embedded in epic Mahabharata lore to prevent direct algorithm disclosure:
 
-### Hint 1: The Opening Utterance
-* **Difficulty:** Low
-* **Text:** *"The scroll's first words are a speaker's name followed by an ancient word meaning 'spoke'."*
-* **Cryptographic Objective:** Clarifies the Sanskrit epic dialogue salutation format (`<SPEAKER>UVACHA`) in Fragment A for teams to deduce `DHRITARASHTRAUVACHA`.
+### Hint 1: The Unwavering Witness
+* **Difficulty:** Hard (Cryptic Lore Nudge)
+* **Text:** *"When darkness shrouded the battle of eighteen days, a single narrator was granted divine vision to speak the unfolding truth to the sightless throne. His sacred name and formula bind the tongue before the wheels begin to turn."*
+* **Cryptographic Objective:** Cryptically hints at Sanjaya (`SANJAYAUVACHA`, the Gate II passphrase & Keyword Substitution layer $S$) and the opening salutation formula (`DHRITARASHTRAUVACHA`).
 
-### Hint 2: The Blind King's Inquiry
-* **Difficulty:** Low-Medium
-* **Text:** *"The speaker is the first one to speak in the great song's very first verse (Bhagavad Gita 1.1)."*
-* **Cryptographic Objective:** Nudges teams directly to Bhagavad Gita verse 1.1 (*Dhritarashtra Uvacha*).
-
-### Hint 3: Idle Strokes of the Scribe
-* **Difficulty:** Medium
-* **Text:** *"Some idle symbols (null prefix) come before the first word to steady the hand."*
-* **Cryptographic Objective:** Instructs teams to drag the crib across null padding offsets $k \in \{0, 1, \dots, 11\}$ to align the crib correctly.
-
-### Hint 4: The Rearranged Tongue
-* **Difficulty:** Medium-High
-* **Text:** *"The wheels are not the first lock on the speech: a rearranged tongue (pre-substitution layer S) lies in front of them."*
-* **Cryptographic Objective:** Clarifies that the Enigma engine output is encoded via a pre-substitution layer $S$ before raw plaintext generation.
-
-### Hint 5: The Narrator's Key
-* **Difficulty:** High
-* **Text:** *"The rearranging uses the narrator's name and formula (SANJAYAUVACHA) as a keyword, with the unused symbols following in their usual order."*
-* **Cryptographic Objective:** Formally discloses the keyword substitution algorithm constructed using `SANJAYAUVACHA`.
-
-### Hint 6: Testing the Wheels
-* **Difficulty:** Direct Nudge
-* **Text:** *"The final wheel order is among those you can test with a good crib in your offline simulator."*
-* **Cryptographic Objective:** Directs teams to run an offline crib-drag search over all $8P4 = 1,680$ seated rotor permutations to isolate the true machine wiring order.
+### Hint 2: The Harmony of Eighteen
+* **Difficulty:** Hard (Mathematical & Cryptanalytic Nudge)
+* **Text:** *"Eighteen akshauhinis assembled upon the sacred field, and for eighteen suns the concentric spirals of the Vyuha held firm. Let the sacred count of the war govern the rhythm of each wheel's inner ring, while the narrator's first utterance guides your offline search through the seating of the wheels."*
+* **Cryptographic Objective:** Cryptically hints at the 18-based ring setting rule (`ring[n] = (n * 18) mod 30`) and performing an offline 4-rotor permutation search ($8P4 = 1,680$) using the opening crib.
 
 ---
 
@@ -151,7 +131,7 @@ codebase C3/
 │   └── tests/                 # 37 pytest integration & unit tests
 ├── config/
 │   ├── gates.yaml             # Seal gate definitions & SHA-256 hashes
-│   ├── hints.yaml             # Progressive hint release configuration
+│   ├── hints.yaml             # Progressive hint release configuration (2 Hard Hints)
 │   └── rules.yaml             # Rate limits, token bucket, lockout caps
 ├── frontend/
 │   ├── src/                   # Vite / TypeScript obfuscated frontend UI

@@ -1,30 +1,10 @@
 hints:
   - id: 1
-    title: "The Opening Utterance"
-    text: "The scroll's first words are a speaker's name followed by an ancient word meaning 'spoke'."
+    title: "The Unwavering Witness"
+    text: "When darkness shrouded the battle of eighteen days, a single narrator was granted divine vision to speak the unfolding truth to the sightless throne. His sacred name and formula bind the tongue before the wheels begin to turn."
     released: false
 
   - id: 2
-    title: "The Blind King's Inquiry"
-    text: "The speaker is the first one to speak in the great song's very first verse (Gita 1.1)."
-    released: false
-
-  - id: 3
-    title: "Idle Strokes of the Scribe"
-    text: "Some idle symbols (null prefix) come before the first word to steady the hand."
-    released: false
-
-  - id: 4
-    title: "The Rearranged Tongue"
-    text: "The wheels are not the first lock on the speech: a rearranged tongue (pre-substitution layer S) lies in front of them."
-    released: false
-
-  - id: 5
-    title: "The Narrator's Key"
-    text: "The rearranging uses the narrator's name and formula as a keyword, with the unused symbols following in their usual order."
-    released: false
-
-  - id: 6
-    title: "Testing the Wheels"
-    text: "The final wheel order is among those you can test with a good crib in your offline simulator."
+    title: "The Harmony of Eighteen"
+    text: "Eighteen akshauhinis assembled upon the sacred field, and for eighteen suns the concentric spirals of the Vyuha held firm. Let the sacred count of the war govern the rhythm of each wheel's inner ring, while the narrator's first utterance guides your offline search through the seating of the wheels."
     released: false
