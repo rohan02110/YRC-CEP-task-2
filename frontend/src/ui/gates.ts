@@ -6,7 +6,7 @@
 
 import { api } from '../net/client';
 import { sound } from '../audio/synth';
-import { GatesStatus, HintItem } from '../machine/types';
+import { GatesStatus } from '../machine/types';
 
 export class GatesPanel {
   private mount: HTMLElement;
@@ -63,13 +63,6 @@ export class GatesPanel {
           <div class="gates-list-container" id="gates-list">
             <div class="loading-spinner">Consulting the stars...</div>
           </div>
-
-          <div class="hints-section" id="hints-section">
-            <h3><span class="gold-symbol">📜</span> REVEALED INSPIRATIONS (HINTS)</h3>
-            <div id="hints-list" class="hints-list">
-              <p class="no-hints">No divine inspirations have been revealed yet.</p>
-            </div>
-          </div>
         </div>
       </div>
     `;
@@ -82,7 +75,6 @@ export class GatesPanel {
     }
 
     await this.refreshGates();
-    await this.refreshHints();
   }
 
   public hideModal() {
@@ -232,32 +224,6 @@ export class GatesPanel {
     } catch (err: unknown) {
       feedback.textContent = (err as Error).message || 'Submission rejected.';
       feedback.className = 'gate-feedback error';
-    }
-  }
-
-  private async refreshHints() {
-    if (!this.modal) return;
-    const hintsEl = this.modal.querySelector('#hints-list');
-    if (!hintsEl) return;
-
-    try {
-      const hints: HintItem[] = await api.getHints();
-      if (!hints || hints.length === 0) {
-        hintsEl.innerHTML = `<p class="no-hints">No divine inspirations have been released yet by the organizers.</p>`;
-        return;
-      }
-
-      hintsEl.innerHTML = hints.map((h) => `
-        <div class="hint-card">
-          <div class="hint-header">
-            <span class="hint-id">INSPIRATION #${h.id}</span>
-            <span class="hint-title">${h.title}</span>
-          </div>
-          <p class="hint-text">${h.text}</p>
-        </div>
-      `).join('');
-    } catch {
-      hintsEl.innerHTML = `<p class="no-hints">Inspirations temporarily unreachable.</p>`;
     }
   }
 }

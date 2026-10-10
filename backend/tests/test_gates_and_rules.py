@@ -115,10 +115,11 @@ def test_public_and_gated_artifacts_access():
 def test_gate_unlocking_ladder_and_decoy_detection():
     init_resp = client.post("/api/v1/session", json={}).json()
     session_id = init_resp["session_id"]
+    team_id = init_resp["team_id"]
     seq = 0
     nonce = init_resp["next_nonce"]
 
-    # Invalid seal rejected
+    # 1. Invalid seal on Gate 1 triggers 180s (3 minute) penalty
     seq += 1
     resp = client.post("/api/v1/gates/unlock", json={
         "session_id": session_id,
@@ -131,10 +132,28 @@ def test_gate_unlocking_ladder_and_decoy_detection():
     data = resp.json()
     assert data["success"] is False
     assert data["is_unlocked"] is False
+    assert data["is_locked"] is True
+    assert data["lock_remaining_seconds"] == 180
     nonce = data["next_nonce"]
 
-    # Valid seal unlocked (supports numeric "1" or "I" and variations)
+    # 2. During penalty lockout, submitting flags is rejected with 423 Locked
     seq += 1
+    flag_resp = client.post("/api/v1/submit", json={
+        "session_id": session_id,
+        "seq": seq,
+        "nonce": nonce,
+        "flag": "KCTF{ANY_FLAG}"
+    })
+    assert flag_resp.status_code == 423
+    assert "Locked" in flag_resp.text
+
+    # Fast forward past Gate 1 penalty in database
+    with get_db_connection() as conn:
+        conn.execute("UPDATE lockouts SET locked_until = 0 WHERE team_id = ?", (team_id,))
+        conn.execute("UPDATE team_gates SET locked_until = 0 WHERE team_id = ?", (team_id,))
+        conn.commit()
+
+    # Now valid seal unlocks Gate 1 (supports numeric "1" or "I" and variations)
     resp = client.post("/api/v1/gates/unlock", json={
         "session_id": session_id,
         "seq": seq,
@@ -147,6 +166,29 @@ def test_gate_unlocking_ladder_and_decoy_detection():
     assert data["success"] is True
     assert data["is_unlocked"] is True
     nonce = data["next_nonce"]
+
+    # 3. Invalid seal on Gate 2 triggers 300s (5 minute) penalty
+    seq += 1
+    resp = client.post("/api/v1/gates/unlock", json={
+        "session_id": session_id,
+        "seq": seq,
+        "nonce": nonce,
+        "gate_id": "II",
+        "seal": "WRONG_SANJAYA_SEAL"
+    })
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["success"] is False
+    assert data["is_unlocked"] is False
+    assert data["is_locked"] is True
+    assert data["lock_remaining_seconds"] == 300
+    nonce = data["next_nonce"]
+
+    # Fast forward past Gate 2 penalty
+    with get_db_connection() as conn:
+        conn.execute("UPDATE lockouts SET locked_until = 0 WHERE team_id = ?", (team_id,))
+        conn.execute("UPDATE team_gates SET locked_until = 0 WHERE team_id = ?", (team_id,))
+        conn.commit()
 
     # Unlock Gate 2 with numeric "2"
     seq += 1

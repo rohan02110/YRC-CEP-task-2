@@ -287,13 +287,28 @@ class RulesEngine:
 
     @staticmethod
     def check_gate_lockout(team_id: str, gate_id: str, current_time: Optional[float] = None) -> Tuple[bool, int]:
-        return False, 0
+        now = current_time or time.time()
+        norm_gate_id = normalize_gate_id(gate_id)
+        # Check team-wide lockout
+        is_locked, rem_lock, _ = RulesEngine.check_lockout(team_id, now)
+        # Check gate-specific lockout
+        with get_db_connection() as conn:
+            row = conn.execute(
+                "SELECT locked_until FROM team_gates WHERE team_id = ? AND gate_id = ?",
+                (team_id, norm_gate_id)
+            ).fetchone()
+            if row and row["locked_until"] and row["locked_until"] > now:
+                gate_rem = int(row["locked_until"] - now)
+                return True, max(rem_lock, gate_rem)
+        return is_locked, rem_lock
 
     @staticmethod
     def unlock_gate(team_id: str, gate_id: str, seal_offered: str, current_time: Optional[float] = None) -> Tuple[bool, str, Dict[str, Any]]:
         """
         Attempts to unlock a gate.
         Validates seal against known canonical flags, salted SHA-256 hashes, and env overrides.
+        Enforces a 3-minute penalty (180s) for Gate 1 and 5-minute penalty (300s) for Gate 2 wrong answers.
+        During penalty lockout, no response flags or gate offerings are accepted.
         """
         now = current_time or time.time()
         gates_cfg = load_gates_config()
@@ -304,6 +319,16 @@ class RulesEngine:
             return False, f"Unknown celestial gate '{gate_id}'.", {}
 
         gate_cfg = gate_defs[norm_gate_id]
+
+        # Check if already locked out
+        is_locked, rem_lock, lock_reason = RulesEngine.check_lockout(team_id, now)
+        gate_locked, gate_rem = RulesEngine.check_gate_lockout(team_id, norm_gate_id, now)
+        if is_locked or gate_locked:
+            effective_rem = max(rem_lock, gate_rem)
+            return False, f"Celestial penalty active. Offering seals forbidden for {effective_rem}s.", {
+                "is_locked": True,
+                "lock_remaining": effective_rem
+            }
 
         # Check if already unlocked
         unlocked_gates = RulesEngine.get_team_unlocked_gates(team_id)
@@ -340,7 +365,35 @@ class RulesEngine:
                     break
 
         if not is_valid:
-            return False, f"The offered seal is rejected by Gate {norm_gate_id}.", {"is_locked": False, "lock_remaining": 0}
+            # Penalty duration: Gate 1 (I) = 3 minutes (180s), Gate 2 (II) = 5 minutes (300s)
+            if norm_gate_id in ("I", "1"):
+                penalty_sec = float(gate_cfg.get("wrong_penalty_seconds", 180))  # 3 minutes
+                penalty_reason = "Gate I seal rejected (Penalty: 3 minutes)"
+            elif norm_gate_id in ("II", "2"):
+                penalty_sec = float(gate_cfg.get("wrong_penalty_seconds", 300))  # 5 minutes
+                penalty_reason = "Gate II seal rejected (Penalty: 5 minutes)"
+            else:
+                penalty_sec = float(gate_cfg.get("wrong_penalty_seconds", 180))
+                penalty_reason = f"Gate {norm_gate_id} seal rejected"
+
+            # Apply team-wide lockout so flags & actions are denied
+            RulesEngine.apply_lockout(team_id, penalty_sec, penalty_reason, current_time=now)
+
+            # Record in team_gates table
+            with get_db_connection() as conn:
+                conn.execute(
+                    "INSERT INTO team_gates (team_id, gate_id, wrong_attempts, locked_until) "
+                    "VALUES (?, ?, 1, ?) "
+                    "ON CONFLICT(team_id, gate_id) DO UPDATE SET wrong_attempts = wrong_attempts + 1, locked_until = max(locked_until, excluded.locked_until)",
+                    (team_id, norm_gate_id, now + penalty_sec)
+                )
+                conn.commit()
+
+            minutes_label = int(penalty_sec // 60)
+            return False, f"The offered seal is rejected by Gate {norm_gate_id}. Celestial penalty of {minutes_label} minutes engaged.", {
+                "is_locked": True,
+                "lock_remaining": int(penalty_sec)
+            }
 
         # Correct seal -> Unlock gate
         with get_db_connection() as conn:
@@ -357,4 +410,5 @@ class RulesEngine:
             "reveals": gate_cfg.get("reveals", []),
             "unlocks": gate_cfg.get("unlocks")
         }
+
 

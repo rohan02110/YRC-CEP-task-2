@@ -53,11 +53,11 @@ rotors[3].step()
 
 The challenge employs progressive seal gates to ensure information denial on public surfaces:
 
-| Gate | Requirement | Unlocked Assets & Surface |
-| :---: | :--- | :--- |
-| **Gate 0** | Public Access | Training Replica endpoint (`/api/machine/replica`), static public config (`replica_config.json`), `enigma_spec.txt`. |
-| **Gate I** | Submit `KCTF{GANDIVA_BOW_UNSTRINGED_SECRET}` | Unlocks Fragment A in `flavor.txt` (the opening salutation riddle). |
-| **Gate II** | Submit `SANJAYAUVACHA` | Unlocks `ciphertext.txt`, `rotor_wirings.json`, `rotor_notches.json`, and Original Machine live endpoints (`/api/machine/step`). |
+| Gate | Requirement | Wrong Answer Penalty | Unlocked Assets & Surface |
+| :---: | :--- | :--- | :--- |
+| **Gate 0** | Public Access | None | Training Replica endpoint (`/api/machine/replica`), static public config (`replica_config.json`), `enigma_spec.txt`. |
+| **Gate I** | Submit `KCTF{GANDIVA_BOW_UNSTRINGED_SECRET}` | **3 Minutes (180s) Lockout** | Unlocks Fragment A in `flavor.txt` (the opening salutation riddle). |
+| **Gate II** | Submit `SANJAYAUVACHA` | **5 Minutes (300s) Lockout** | Unlocks `ciphertext.txt`, `rotor_wirings.json`, `rotor_notches.json`, and Original Machine live endpoints (`/api/machine/step`). |
 
 ---
 
@@ -68,7 +68,11 @@ To enforce offline cryptanalysis over brute-force server hammering, strict budge
 * **Token Bucket:** 400 token capacity, refilling at 400 tokens/hour.
 * **Lifetime Keypress Cap:** Hard ceiling of 2,000 keypresses per team.
 * **Chakra Reset:** Deducts 30 tokens to reset machine position to initial state.
-* **Strike System & Lockouts:** Incorrect gate or flag submissions double the lockout duration, capped at a maximum of **300 seconds (5 minutes)**.
+* **Gate Wrong Answer Penalties:**
+  * **Gate I:** 3-minute (180s) lockout on wrong seal submission.
+  * **Gate II:** 5-minute (300s) lockout on wrong seal submission.
+  * **Active Penalty Denial:** During the lockout penalty, the server rejects all flag submissions and seal offerings (HTTP 423 Locked).
+* **Strike System & Lockouts:** Incorrect flag submissions ladder up to a maximum of **300 seconds (5 minutes)**.
 * **Client Lockdown & Honeypots:** Includes infinite loop debugger traps, console clearing, shortcut blocks (`F12`, `Ctrl+Shift+I`), and honeypot routes (`/tactical_dispatch.txt`, `/robots.txt`).
 
 ---
